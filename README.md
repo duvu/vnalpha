@@ -51,6 +51,7 @@ Start here:
 - [Implementation roadmap](docs/07-implementation-roadmap.md)
 - [Initial repository structure](docs/08-initial-repository-structure.md)
 - [Workspace service design](docs/09-workspace-service-design.md)
+- [Phased roadmap](docs/10-roadmap-phases.md)
 
 ## Suggested MVP stack
 
