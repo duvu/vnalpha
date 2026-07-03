@@ -1,32 +1,46 @@
 # vnalpha documentation
 
-`vnalpha` is designed as an AI-assisted Pattern Detection and Watchlist Platform for Vietnamese equities.
+`vnalpha` is designed as an OpenBB-inspired AI-assisted Research Workspace and Pattern Detection Platform for Vietnamese equities.
+
+The product is now explicitly split from the data layer:
+
+```text
+vnstock-service  = independent market data platform service
+vnalpha-service  = independent research workspace service
+```
+
+`vnalpha` should not call provider-specific market data endpoints directly. It should consume validated, normalized, and diagnosable data from `vnstock-service`, then own the research workspace layer: features, patterns, outcomes, watchlists, AI explanations, dashboards, reports, and journals.
+
+## Documentation map
 
 The documentation is organized around the main engineering concerns:
 
 1. **Vision and scope** — what the system should and should not do.
-2. **System architecture** — major services, data stores, and execution flow.
-3. **Data pipeline** — how `vnstock` data is ingested, validated, canonicalized, and stored.
+2. **System architecture** — service split, workspace architecture, data stores, and execution flow.
+3. **Data pipeline** — how `vnstock-service` data is ingested, validated, canonicalized, and stored.
 4. **Pattern engine** — how price/volume patterns are represented, detected, scored, and invalidated.
 5. **Backtest and outcome tracking** — how every detected pattern is evaluated after 5/10/20/60 sessions.
 6. **AI layer** — how LLMs are used safely for explanation, critique, reporting, and research assistance.
-7. **Roadmap** — an implementation sequence that avoids overbuilding before the core signal logic is validated.
+7. **Roadmap** — an implementation sequence that avoids overbuilding before the core research loop is validated.
 8. **Repository structure** — a practical starting layout for the codebase.
+9. **Workspace service design** — service API, workspace modules, UI/API/agent boundaries.
 
 ## Design stance
 
-The project should start as an **end-of-day research system**:
+The project should start as an end-of-day research workspace service:
 
 ```text
-validated market data
+vnstock-service
+→ validated market data
+→ vnalpha-service ingestion
 → canonical OHLCV
 → feature store
 → pivot engine
 → pattern engine
 → outcome tracker
-→ backtest
-→ AI explanation
-→ dashboard and journal
+→ watchlist API
+→ workspace dashboard
+→ AI explanation / risk critique / journal
 ```
 
 It should not start as:
@@ -38,6 +52,21 @@ LLM sees chart
 ```
 
 The second approach is hard to audit, easy to overfit, and unsafe for real-money trading.
+
+## OpenBB-inspired direction
+
+`vnalpha` should be closer to a research workspace than a single-purpose scanner.
+
+The first useful workspace should allow a user to:
+
+- open a market overview;
+- inspect a pattern watchlist;
+- drill into one symbol or pattern instance;
+- view evidence features and chart context;
+- review failed breakouts;
+- compare outcomes by pattern type;
+- generate grounded AI explanations;
+- keep a research journal.
 
 ## First target outcome
 
