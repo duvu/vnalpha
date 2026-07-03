@@ -1,10 +1,29 @@
 # vnalpha
 
-`vnalpha` is an AI-assisted market research and pattern-detection platform for Vietnamese equities.
+`vnalpha` is an OpenBB-inspired, AI-assisted research workspace service for Vietnamese equities.
+
+It is designed to run as an independent workspace service that consumes market data from `vnstock-service` instead of embedding provider-specific data access logic.
+
+```text
+vnstock-service  = data platform service
+vnalpha-service  = research workspace service
+```
+
+## Product direction
+
+`vnalpha` should behave like a Vietnam-focused investment research workspace:
+
+- connect to `vnstock-service` for validated market/reference/fundamental data;
+- build and own research datasets such as canonical OHLCV, features, patterns, outcomes, watchlists, reports, and journals;
+- provide interactive workspace screens for analysts and AI agents;
+- expose a workspace API for dashboards, notebooks, CLI/TUI, and future agent tools;
+- keep data lineage, scoring evidence, assumptions, and forward outcomes auditable.
+
+## Core workflows
 
 The project focuses on end-of-day research workflows:
 
-- ingest validated market data from `vnstock` or compatible adapters;
+- ingest validated market data from `vnstock-service`;
 - build a canonical OHLCV research dataset;
 - compute technical, liquidity, relative-strength, and market-regime features;
 - detect structured price/volume patterns such as accumulation bases, breakouts, failed breakouts, VCP, and healthy pullbacks;
@@ -14,7 +33,7 @@ The project focuses on end-of-day research workflows:
 
 ## Core principle
 
-`vnalpha` is a research and watchlist system, not an auto-trading bot.
+`vnalpha` is a research and watchlist workspace, not an auto-trading bot.
 
 The system should not place orders, connect to broker execution APIs, or let an LLM override deterministic risk rules. AI is used for explanation, critique, summarization, and research assistance. Signal generation must remain rule-based, testable, auditable, and validated by backtests/outcome tracking.
 
@@ -31,15 +50,17 @@ Start here:
 - [AI layer](docs/06-ai-layer.md)
 - [Implementation roadmap](docs/07-implementation-roadmap.md)
 - [Initial repository structure](docs/08-initial-repository-structure.md)
+- [Workspace service design](docs/09-workspace-service-design.md)
 
 ## Suggested MVP stack
 
 - Python
-- `vnstock` as the data foundation
+- FastAPI for `vnalpha-service`
+- Streamlit for first workspace UI
+- `vnstock-service` as the data foundation
 - DuckDB + Parquet for local research storage
 - Pandas / NumPy for feature engineering
 - VectorBT for backtesting
-- Streamlit for the first dashboard
 - LiteLLM or a compatible LLM gateway for AI explanations
 
 ## Compliance note
