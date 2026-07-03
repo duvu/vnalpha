@@ -2,6 +2,8 @@
 
 ## Recommended structure
 
+`vnalpha` is now designed as an independent workspace service. The repository should start as a modular monolith with a FastAPI service, Streamlit dashboard, and a thin client for `vnstock-service`.
+
 ```text
 vnalpha/
 ├── README.md
@@ -14,11 +16,13 @@ vnalpha/
 │   ├── 05-backtest-and-outcome.md
 │   ├── 06-ai-layer.md
 │   ├── 07-implementation-roadmap.md
-│   └── 08-initial-repository-structure.md
+│   ├── 08-initial-repository-structure.md
+│   └── 09-workspace-service-design.md
 │
 ├── configs/
+│   ├── app.yaml
+│   ├── services.yaml
 │   ├── universe.yaml
-│   ├── providers.yaml
 │   ├── features.yaml
 │   ├── patterns.yaml
 │   └── scoring.yaml
@@ -27,9 +31,26 @@ vnalpha/
 │   └── vnalpha/
 │       ├── __init__.py
 │       │
+│       ├── api/
+│       │   ├── __init__.py
+│       │   ├── app.py
+│       │   ├── routes_health.py
+│       │   ├── routes_market.py
+│       │   ├── routes_watchlist.py
+│       │   ├── routes_patterns.py
+│       │   ├── routes_outcomes.py
+│       │   ├── routes_backtest.py
+│       │   └── routes_ai.py
+│       │
+│       ├── clients/
+│       │   └── vnstock/
+│       │       ├── __init__.py
+│       │       ├── client.py
+│       │       ├── schemas.py
+│       │       └── errors.py
+│       │
 │       ├── ingestion/
 │       │   ├── __init__.py
-│       │   ├── vnstock_client.py
 │       │   ├── sync_universe.py
 │       │   ├── sync_ohlcv.py
 │       │   ├── quality_gate.py
@@ -89,6 +110,15 @@ vnalpha/
 │       │       ├── risk_critic.md
 │       │       └── daily_report.md
 │       │
+│       ├── workspace/
+│       │   ├── __init__.py
+│       │   ├── market_overview.py
+│       │   ├── watchlist.py
+│       │   ├── symbol_workspace.py
+│       │   ├── pattern_detail.py
+│       │   ├── journal.py
+│       │   └── reports.py
+│       │
 │       ├── dashboard/
 │       │   ├── __init__.py
 │       │   └── streamlit_app.py
@@ -109,14 +139,16 @@ vnalpha/
 │   └── 03_pattern_backtest.ipynb
 │
 ├── tests/
-│   ├── test_quality_gate.py
-│   ├── test_features.py
-│   ├── test_pattern_engine.py
-│   └── test_outcome.py
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
 │
 ├── pyproject.toml
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
 ├── .gitignore
-└── docker-compose.yml
+└── Makefile
 ```
 
 ## Minimal first implementation
@@ -130,11 +162,19 @@ vnalpha/
 ├── README.md
 ├── docs/
 ├── configs/
+│   ├── app.yaml
+│   ├── services.yaml
 │   └── universe.yaml
 ├── src/
 │   └── vnalpha/
+│       ├── api/
+│       │   ├── app.py
+│       │   └── routes_health.py
+│       ├── clients/
+│       │   └── vnstock/
+│       │       ├── client.py
+│       │       └── schemas.py
 │       ├── ingestion/
-│       │   ├── vnstock_client.py
 │       │   ├── sync_ohlcv.py
 │       │   ├── quality_gate.py
 │       │   └── build_canonical.py
@@ -149,12 +189,37 @@ vnalpha/
 │       │   ├── base.py
 │       │   ├── accumulation_base.py
 │       │   └── accumulation_breakout.py
+│       ├── workspace/
+│       │   ├── watchlist.py
+│       │   └── pattern_detail.py
 │       └── dashboard/
 │           └── streamlit_app.py
 └── tests/
 ```
 
 ## Suggested configuration files
+
+### configs/app.yaml
+
+```yaml
+app:
+  name: vnalpha-service
+  environment: local
+  storage_path: ./data
+  timezone: Asia/Ho_Chi_Minh
+```
+
+### configs/services.yaml
+
+```yaml
+services:
+  vnstock:
+    mode: service
+    base_url: http://localhost:6900
+    timeout_seconds: 30
+    default_source: auto
+    validate: true
+```
 
 ### configs/universe.yaml
 
@@ -171,19 +236,6 @@ universe:
       - suspended
     liquidity:
       min_avg_traded_value_20d: 3000000000
-```
-
-### configs/providers.yaml
-
-```yaml
-ohlcv_daily:
-  primary: KBS
-  fallback:
-    - VCI
-    - DNSE
-  validate: true
-  quality_mode: warn
-  min_history_sessions: 250
 ```
 
 ### configs/patterns.yaml
@@ -224,6 +276,14 @@ ratings:
 
 ## Suggested command flow
 
+Service startup:
+
+```bash
+uvicorn vnalpha.api.app:app --host 127.0.0.1 --port 7800
+```
+
+Pipeline:
+
 ```bash
 python -m vnalpha.ingestion.sync_ohlcv --start 2023-01-01 --end today
 python -m vnalpha.ingestion.build_canonical --date today
@@ -235,31 +295,39 @@ python -m vnalpha.patterns.accumulation_breakout --date today
 streamlit run src/vnalpha/dashboard/streamlit_app.py
 ```
 
+Docker compose target:
+
+```bash
+docker compose up vnstock-service vnalpha-service vnalpha-dashboard
+```
+
 ## Initial package dependencies
 
 Recommended starting dependencies:
 
 ```text
+fastapi
+uvicorn
+httpx
+pydantic
+pydantic-settings
 pandas
 numpy
 duckdb
 pyarrow
-pydantic
 pyyaml
 plotly
 streamlit
-vnstock
 ```
 
 Later:
 
 ```text
 vectorbt
-fastapi
-uvicorn
 litellm
 mlflow
 lightgbm
+redis
 ```
 
 ## Testing priorities
@@ -267,13 +335,16 @@ lightgbm
 First tests should cover:
 
 ```text
+vnstock-service client contract
 OHLC consistency validation
 quality gate decisions
+canonical OHLCV construction
 MA/volume/RS feature computation
 accumulation base detection
 breakout detection
 failed breakout detection
 forward return calculation
+workspace watchlist API response
 ```
 
 ## Development rule
@@ -281,3 +352,5 @@ forward return calculation
 Every pattern detector should be testable with a small synthetic OHLCV dataset.
 
 Do not rely only on visual chart inspection.
+
+`vnalpha` must never call broker/account/order APIs. It is a research workspace service only.
