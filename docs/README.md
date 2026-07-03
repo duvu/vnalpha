@@ -21,9 +21,23 @@ The documentation is organized around the main engineering concerns:
 4. **Pattern engine** — how price/volume patterns are represented, detected, scored, and invalidated.
 5. **Backtest and outcome tracking** — how every detected pattern is evaluated after 5/10/20/60 sessions.
 6. **AI layer** — how LLMs are used safely for explanation, critique, reporting, and research assistance.
-7. **Roadmap** — an implementation sequence that avoids overbuilding before the core research loop is validated.
+7. **Implementation roadmap** — the earlier implementation roadmap.
 8. **Repository structure** — a practical starting layout for the codebase.
 9. **Workspace service design** — service API, workspace modules, UI/API/agent boundaries.
+10. **Phased roadmap** — the end-to-end phase plan from workspace foundation to ML ranking.
+
+## Key documents
+
+- [Vision and scope](01-vision-and-scope.md)
+- [System architecture](02-system-architecture.md)
+- [Data pipeline](03-data-pipeline.md)
+- [Pattern engine](04-pattern-engine.md)
+- [Backtest and outcome tracking](05-backtest-and-outcome.md)
+- [AI layer](06-ai-layer.md)
+- [Implementation roadmap](07-implementation-roadmap.md)
+- [Initial repository structure](08-initial-repository-structure.md)
+- [Workspace service design](09-workspace-service-design.md)
+- [Phased roadmap](10-roadmap-phases.md)
 
 ## Design stance
 
